@@ -4,7 +4,7 @@ Apple Magic Keyboard (A1644) and Apple Wireless Keyboard (A1314) driver for Wind
 
 This is a fork of [samartzidis/WinAppleKey](https://github.com/samartzidis/WinAppleKey), the original A1644 driver for Windows 10, which is archived now. A1314 support comes from [jeba1215's fork](https://github.com/jeba1215/WinAppleKey); on top of that this fork adds real media keys, volume, brightness, sleep/hibernate, and the MSI installer.
 
-Windows will type on an A1314 out of the box, so the keyboard isn't broken. What you don't get is the bottom-left corner you're used to. The leftmost key acts as Fn instead of Ctrl, Delete is hidden behind Fn, Eject does nothing, and the media, volume and brightness keys are dead. This driver fixes that.
+Windows will type on an A1314 out of the box, so the keyboard isn't broken. What you don't get is the bottom-left corner you're used to. The leftmost key acts as Fn instead of Ctrl, Delete is hidden behind Fn, ⏏ eject does nothing, and the media, volume and brightness keys are dead. This driver fixes that.
 
 Tested on an A1314 (ISO, PID `0x0256`) over Bluetooth on Windows 11 24H2, build 26100, on a Lenovo ThinkBook - that laptop is what the Fn layer, the brightness keys and the Alt+Tab behaviour were worked out against. The A1644 side comes from the upstream project, but I don't own that keyboard, so it hasn't been re-tested since I changed things. Assume the A1314 path is the well-trodden one.
 
@@ -26,21 +26,21 @@ Hold the physical Ctrl key for the Fn combinations. Yes, Ctrl - that's what the 
 | Fn+P, Fn+S, Fn+B | Print Screen, Scroll Lock, Pause/Break |
 | Fn+Ctrl | Right Ctrl |
 
-Eject is Delete.
+⏏ eject is Delete.
 
 Any other Fn+key combination is deliberately swallowed. Fn never reaches Windows as Ctrl, so you can't trigger a shortcut by accident, and a half-typed Fn chord doesn't start doing strange things in whatever window happens to be focused.
 
-On the left, fn and Ctrl are swapped, Option becomes Win and Command becomes Alt. The right side only has two keys to work with, and one of them is the context-menu key. By default the right Command is Alt and the right Option opens the menu. Set `SwapRightCmdAlt` to 0 if you'd rather have the menu on the Command key.
+On the left, fn and Ctrl are swapped, ⌥ alt becomes Win and ⌘ cmd becomes Alt. The right side only has two keys to work with, and one of them is the context-menu key. By default the right ⌘ cmd is Alt and the right ⌥ alt opens the menu. Set `SwapRightCmdAlt` to 0 if you'd rather have the menu on ⌘ cmd.
 
 That Alt is the **left** one on purpose. Windows treats Right Alt as AltGr, and the task switcher never gets the "commit" from a VK_RMENU release - Alt+Tab with it leaves the window list on screen waiting for Enter.
 
-One thing that trips people up: Alt, Ctrl and Win do nothing on their own. If you press the right Option and nothing happens, that's Alt behaving normally. Try Option+Tab.
+One thing that trips people up: Alt, Ctrl and Win do nothing on their own. If you press the right ⌥ alt and nothing happens, that's Alt behaving normally. Try ⌥ alt+Tab.
 
 ## How it works
 
 The driver is a lower filter on the HID device node, so it sits between the transport (USB or Bluetooth) and HIDCLASS and gets to rewrite input reports before anything parses them. No user-mode software is involved.
 
-The two keyboards don't look alike on the wire. The A1644 sends 11-byte reports. The A1314 sends 10-byte keyboard reports plus 3-byte "special key" reports that carry Eject and Fn in the low bits. `A1314.c` and `A1644.c` each know their layout and translate it, then both go through the same rules.
+The two keyboards don't look alike on the wire. The A1644 sends 11-byte reports. The A1314 sends 10-byte keyboard reports plus 3-byte "special key" reports that carry ⏏ eject and Fn in the low bits. `A1314.c` and `A1644.c` each know their layout and translate it, then both go through the same rules.
 
 Volume and brightness needed a different trick. The A1314's report descriptor has no Mute, Volume or Brightness usages at all, and Windows ignores the ones that exist on the keyboard page, so there was nothing to rewrite in the report. Instead the driver also installs itself as a tiny root-enumerated device and creates a virtual Consumer Control device through the Virtual HID Framework. Windows sees a second, ordinary multimedia keyboard with Mute, Vol+/Vol- and Brightness+/Brightness-, and Fn+F1/F2 plus Fn+F10..F12 submit reports to it. That's also why you'll find a "WinAppleKey Virtual HID Device" in Device Manager.
 
@@ -107,9 +107,9 @@ Four DWORDs under `HKLM\SYSTEM\CurrentControlSet\Services\WinAppleKey`.
 | Value | Default | What it does |
 | --- | --- | --- |
 | `SwapFnCtrl` | 1 | fn and Ctrl swap places |
-| `SwapAltCmd` | 1 | Option and Command swap places, left side only |
+| `SwapAltCmd` | 1 | ⌥ alt and ⌘ cmd swap places, left side only |
 | `RightCmdAsMenu` | 1 | one of the right-hand modifiers becomes the context-menu key |
-| `SwapRightCmdAlt` | 1 | 0: right Command is the menu key, right Option is Alt. 1: the other way round |
+| `SwapRightCmdAlt` | 1 | 0: right ⌘ cmd is the menu key, right ⌥ alt is Alt. 1: the other way round |
 
 These live under the driver's service key, so a full uninstall takes them with it and the next install starts from the INF defaults again. Worth remembering if you change something and then reinstall the package.
 
@@ -209,7 +209,7 @@ The platform may not support the sleep state being requested; Modern Standby mac
 **Why is there a second "WinAppleKey Virtual HID Device"?**
 That's the virtual Consumer Control device that provides brightness and the volume keys. Remove that device and you lose those, nothing else.
 
-**The right Option/Command does nothing.**
+**The right ⌥ alt / ⌘ cmd does nothing.**
 It's a modifier. Modifiers don't produce events on their own. Try it with Tab.
 
 **Which keyboards are supported?**
