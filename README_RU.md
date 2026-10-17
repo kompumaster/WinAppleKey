@@ -23,7 +23,10 @@ Windows и так печатает с A1314, клавиатура не слом�
 | [Fn]+[F6] | гибернация |
 | [Fn]+[F7], [F8], [F9] | предыдущий трек, play/pause, следующий трек |
 | [Fn]+[F10], [F11], [F12] | mute, тише, громче |
-| [Fn]+[стрелки] | [Home], [End], [Page Up], [Page Down] |
+| [Fn]+[←] | [Home] |
+| [Fn]+[→] | [End] |
+| [Fn]+[↑] | [Page Up] |
+| [Fn]+[↓] | [Page Down] |
 | [Fn]+[Return] | [Insert] |
 | [Fn]+[P], [Fn]+[S], [Fn]+[B] | [Print Screen], [Scroll Lock], [Pause/Break] |
 | [Fn]+[Ctrl] | [Right Ctrl] |

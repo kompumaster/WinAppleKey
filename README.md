@@ -23,7 +23,10 @@ Hold the physical [Ctrl] key for the [Fn] combinations. Yes, [Ctrl] - that's wha
 | [Fn]+[F6] | hibernate |
 | [Fn]+[F7], [F8], [F9] | previous track, play/pause, next track |
 | [Fn]+[F10], [F11], [F12] | mute, volume down, volume up |
-| [Fn]+[arrows] | [Home], [End], [Page Up], [Page Down] |
+| [Fn]+[←] | [Home] |
+| [Fn]+[→] | [End] |
+| [Fn]+[↑] | [Page Up] |
+| [Fn]+[↓] | [Page Down] |
 | [Fn]+[Return] | [Insert] |
 | [Fn]+[P], [Fn]+[S], [Fn]+[B] | [Print Screen], [Scroll Lock], [Pause/Break] |
 | [Fn]+[Ctrl] | [Right Ctrl] |
