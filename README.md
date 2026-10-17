@@ -2,7 +2,7 @@
 
 **English** · [Русский](README_RU.md)
 
-Apple Magic Keyboard (A1644) and Apple Wireless Keyboard (A1314) driver for Windows.
+Apple Magic Keyboard (A1644) and Apple Wireless Keyboard (A1314) driver for Windows **with working multimedia hotkeys!** ThinkBook-like layout.
 
 ![Apple Wireless Keyboard (A1314)](A1314.jpg)
 

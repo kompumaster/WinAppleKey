@@ -2,7 +2,7 @@
 
 **Русский** · [English](README.md)
 
-Драйвер для Apple Magic Keyboard (A1644) и Apple Wireless Keyboard (A1314) под Windows.
+Драйвер для Apple Magic Keyboard (A1644) и Apple Wireless Keyboard (A1314) под Windows **с работающими мультимедийными клавишами!** Раскладка как на ThinkBook.
 
 ![Apple Wireless Keyboard (A1314)](A1314.jpg)
 
