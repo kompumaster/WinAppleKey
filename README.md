@@ -4,6 +4,8 @@
 
 Apple Magic Keyboard (A1644) and Apple Wireless Keyboard (A1314) driver for Windows.
 
+![Apple Wireless Keyboard (A1314)](A1314.jpg)
+
 This is a fork of [samartzidis/WinAppleKey](https://github.com/samartzidis/WinAppleKey), the original A1644 driver for Windows 10, which is archived now. A1314 support comes from [jeba1215's fork](https://github.com/jeba1215/WinAppleKey); on top of that this fork adds real media keys, volume, brightness, sleep/hibernate, and the MSI installer.
 
 Windows will type on an A1314 out of the box, so the keyboard isn't broken. What you don't get is the bottom-left corner you're used to. The leftmost key acts as [Fn] instead of [Ctrl], [Delete] is hidden behind [Fn], [⏏ eject] does nothing, and the media, volume and brightness keys are dead. This driver fixes that.
