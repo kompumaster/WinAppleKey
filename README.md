@@ -208,7 +208,7 @@ They do now, natively. [Fn]+[F7]..[F9] emit real Consumer usages, so Windows han
 [Fn]+[F1]/[F2] go through the virtual device, so without it they're silent no-ops - check that "WinAppleKey Virtual HID Device" is present. And there has to be an internal panel to dim: the usages reach the laptop display, not an external monitor.
 
 **[Ctrl]+[Shift]+[T] doesn't reopen a closed tab in Chrome.**
-That's the keyboard, not the driver: the A1314 cannot resolve [fn] + [Left Shift] + [T] in its key matrix, so the T never leaves the keyboard. [Esc] and [Y] in the same combination arrive fine, and [Right Shift] sits in another column - so use [Ctrl]+[Right Shift]+[T].
+That's the keyboard, not the driver: in [fn] + [Left Shift] + [T] the A1314 never sends the T at all. The same modifiers with another key work: [Ctrl]+[Shift]+[Esc] opens Task Manager. So it's the T key that goes missing, not the modifiers. Use [Ctrl]+[Right Shift]+[T].
 
 **[F5] does nothing, or the machine wakes up again right away.**
 The platform may not support the sleep state being requested; Modern Standby machines have no S3 and use S0 low-power idle instead. For hibernate, check that hibernation is enabled at all (`powercfg /h on`) - otherwise [F6] is a silent no-op.
