@@ -40,6 +40,7 @@ extern "C" {
 	extern DWORD g_dwSwapFnCtrl;
 	extern DWORD g_dwRightCmdAsMenu;
 	extern DWORD g_dwSwapRightCmdAlt;
+	extern DWORD g_dwSwapGraveBackslash;
 
 	enum HidCodes
 	{
@@ -51,6 +52,7 @@ extern "C" {
 		HidKeyT = 0x17,
 		HidKeyZ = 0x1d,
 		HidTab = 0x2b,
+		HidGrave = 0x35, // the ` and ~ key
 		HidF1 = 0x3a,
 		HidF2 = 0x3b,
 		HidF3 = 0x3c,
@@ -63,6 +65,7 @@ extern "C" {
 		HidF10 = 0x43,
 		HidF11 = 0x44,
 		HidF12 = 0x45,
+		HidNonUsBackslash = 0x64, // the ISO key that types \ and |
 		HidF13 = 0x68,
 		HidF14 = 0x69,
 		HidF15 = 0x6a,

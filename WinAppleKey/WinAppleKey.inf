@@ -9,7 +9,7 @@ CatalogFile=WinAppleKey.cat
 PnpLockdown=1
 DriverPackageDisplayName="WinAppleKey"
 DriverPackageType=PlugAndPlay
-DriverVer=10/17/2026,0.1.1.11
+DriverVer=10/17/2026,0.1.1.12
 
 [ControlFlags]
 ExcludeFromSelect = *
@@ -119,6 +119,7 @@ HKR,,SwapAltCmd,0x00010003, 1
 HKR,,SwapFnCtrl,0x00010003, 1
 HKR,,RightCmdAsMenu,0x00010003, 1
 HKR,,SwapRightCmdAlt,0x00010003, 1
+HKR,,SwapGraveBackslash,0x00010003, 1
 
 [Dri_BTH_Inst.NT.HW]
 Include = keyboard.inf

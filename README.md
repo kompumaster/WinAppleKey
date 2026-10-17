@@ -43,6 +43,8 @@ That [Alt] is the **left** one on purpose. Windows treats [Right Alt] as AltGr, 
 
 One thing that trips people up: [Alt], [Ctrl] and [Win] do nothing on their own. If you press the right [⌥ alt] and nothing happens, that's [Alt] behaving normally. Try [⌥ alt]+[Tab].
 
+And one more quirk: on the A1314 the key left of [1] types a backslash and the one left of [Z] types a backtick - the reverse of a PC ISO keyboard. They are swapped back by default; `SwapGraveBackslash=0` gives you Apple's arrangement.
+
 ## How it works
 
 The driver is a lower filter on the HID device node, so it sits between the transport (USB or Bluetooth) and HIDCLASS and gets to rewrite input reports before anything parses them. No user-mode software is involved.
@@ -117,6 +119,7 @@ Four DWORDs under `HKLM\SYSTEM\CurrentControlSet\Services\WinAppleKey`.
 | `SwapAltCmd` | 1 | [⌥ alt] and [⌘ cmd] swap places, left side only |
 | `RightCmdAsMenu` | 1 | one of the right-hand modifiers becomes the context-menu key |
 | `SwapRightCmdAlt` | 1 | 1: right [⌥ alt] opens the menu, right [⌘ cmd] acts as [Alt]. 0: right [⌘ cmd] opens the menu, right [⌥ alt] acts as [Alt] |
+| `SwapGraveBackslash` | 1 | swaps the keys left of [1] and left of [Z] so they match a PC ISO layout |
 
 These live under the driver's service key, so a full uninstall takes them with it and the next install starts from the INF defaults again. Worth remembering if you change something and then reinstall the package.
 

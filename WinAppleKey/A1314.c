@@ -203,6 +203,21 @@ void ProcessA1314Block(PBRB pbrb)
 		return;
 	}
 
+	// ISO keyboards disagree about these two: on the A1314 the key left of [1]
+	// types [\] and the one left of [Z] types [`], while a PC ISO keyboard has
+	// them the other way round. Swap them back unless the user turned it off.
+	if (g_dwSwapGraveBackslash)
+	{
+		int i;
+		for (i = 4; i < 10; i++)
+		{
+			if (TmpBuf[i] == HidGrave)
+				TmpBuf[i] = HidNonUsBackslash;
+			else if (TmpBuf[i] == HidNonUsBackslash)
+				TmpBuf[i] = HidGrave;
+		}
+	}
+
 	// Always emit a well formed 10-byte keyboard report upstream.
 	// NOTE: hidbth allocates the interrupt channel buffer using the largest
 	// input report of the device (10 bytes for the A1314), so growing a

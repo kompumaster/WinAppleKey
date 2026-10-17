@@ -15,6 +15,9 @@ DWORD g_dwSwapAltCmd = 0;
 DWORD g_dwSwapFnCtrl = 0;
 DWORD g_dwRightCmdAsMenu = 0;
 DWORD g_dwSwapRightCmdAlt = 0;
+// On by default: the A1314 has the grave/backslash pair the wrong way round for
+// a PC ISO keyboard. See A1314.c / A1644.c.
+DWORD g_dwSwapGraveBackslash = 1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Driver Entry
@@ -41,6 +44,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT driverObject, IN PUNICODE_STRING registry
 	ReadDriverRegistryValue(registryPath, REG_DWORD, L"SwapFnCtrl", (void*)&g_dwSwapFnCtrl);
 	ReadDriverRegistryValue(registryPath, REG_DWORD, L"RightCmdAsMenu", (void*)&g_dwRightCmdAsMenu);
 	ReadDriverRegistryValue(registryPath, REG_DWORD, L"SwapRightCmdAlt", (void*)&g_dwSwapRightCmdAlt);
+	ReadDriverRegistryValue(registryPath, REG_DWORD, L"SwapGraveBackslash", (void*)&g_dwSwapGraveBackslash);
 
 	return STATUS_SUCCESS;
 }
