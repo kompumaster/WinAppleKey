@@ -1,48 +1,50 @@
 # WinAppleKey
 
+**English** · [Русский](README_RU.md)
+
 Apple Magic Keyboard (A1644) and Apple Wireless Keyboard (A1314) driver for Windows.
 
 This is a fork of [samartzidis/WinAppleKey](https://github.com/samartzidis/WinAppleKey), the original A1644 driver for Windows 10, which is archived now. A1314 support comes from [jeba1215's fork](https://github.com/jeba1215/WinAppleKey); on top of that this fork adds real media keys, volume, brightness, sleep/hibernate, and the MSI installer.
 
-Windows will type on an A1314 out of the box, so the keyboard isn't broken. What you don't get is the bottom-left corner you're used to. The leftmost key acts as Fn instead of Ctrl, Delete is hidden behind Fn, ⏏ eject does nothing, and the media, volume and brightness keys are dead. This driver fixes that.
+Windows will type on an A1314 out of the box, so the keyboard isn't broken. What you don't get is the bottom-left corner you're used to. The leftmost key acts as [Fn] instead of [Ctrl], [Delete] is hidden behind [Fn], [⏏ eject] does nothing, and the media, volume and brightness keys are dead. This driver fixes that.
 
-Tested on an A1314 (ISO, PID `0x0256`) over Bluetooth on Windows 11 24H2, build 26100, on a Lenovo ThinkBook - that laptop is what the Fn layer, the brightness keys and the Alt+Tab behaviour were worked out against. The A1644 side comes from the upstream project, but I don't own that keyboard, so it hasn't been re-tested since I changed things. Assume the A1314 path is the well-trodden one.
+Tested on an A1314 (ISO, PID `0x0256`) over Bluetooth on Windows 11 24H2, build 26100, on a Lenovo ThinkBook - that laptop is what the [Fn] layer, the brightness keys and the [Alt]+[Tab] behaviour were worked out against. The A1644 side comes from the upstream project, but I don't own that keyboard, so it hasn't been re-tested since I changed things. Assume the A1314 path is the well-trodden one.
 
 ## Keys
 
-Hold the physical Ctrl key for the Fn combinations. Yes, Ctrl - that's what the Fn/Ctrl swap is for.
+Hold the physical [Ctrl] key for the [Fn] combinations. Yes, [Ctrl] - that's what the [Fn]/[Ctrl] swap is for.
 
 | You press | You get |
 | --- | --- |
-| Fn+F1, Fn+F2 | brightness down, brightness up |
-| Fn+F3 | Win+Tab, Task View |
-| Fn+F4 | Win+Z, Snap Layouts |
-| Fn+F5 | sleep |
-| Fn+F6 | hibernate |
-| Fn+F7, F8, F9 | previous track, play/pause, next track |
-| Fn+F10, F11, F12 | mute, volume down, volume up |
-| Fn+arrows | Home, End, Page Up, Page Down |
-| Fn+Return | Insert |
-| Fn+P, Fn+S, Fn+B | Print Screen, Scroll Lock, Pause/Break |
-| Fn+Ctrl | Right Ctrl |
+| [Fn]+[F1], [Fn]+[F2] | brightness down, brightness up |
+| [Fn]+[F3] | [Win]+[Tab], Task View |
+| [Fn]+[F4] | [Win]+[Z], Snap Layouts |
+| [Fn]+[F5] | sleep |
+| [Fn]+[F6] | hibernate |
+| [Fn]+[F7], [F8], [F9] | previous track, play/pause, next track |
+| [Fn]+[F10], [F11], [F12] | mute, volume down, volume up |
+| [Fn]+[arrows] | [Home], [End], [Page Up], [Page Down] |
+| [Fn]+[Return] | [Insert] |
+| [Fn]+[P], [Fn]+[S], [Fn]+[B] | [Print Screen], [Scroll Lock], [Pause/Break] |
+| [Fn]+[Ctrl] | [Right Ctrl] |
 
-⏏ eject is Delete.
+[⏏ eject] is [Delete].
 
-Any other Fn+key combination is deliberately swallowed. Fn never reaches Windows as Ctrl, so you can't trigger a shortcut by accident, and a half-typed Fn chord doesn't start doing strange things in whatever window happens to be focused.
+Any other [Fn]+key combination is deliberately swallowed. [Fn] never reaches Windows as [Ctrl], so you can't trigger a shortcut by accident, and a half-typed [Fn] chord doesn't start doing strange things in whatever window happens to be focused.
 
-On the left, fn and Ctrl are swapped, ⌥ alt becomes Win and ⌘ cmd becomes Alt. The right side only has two keys to work with, and one of them is the context-menu key. By default the right ⌘ cmd is Alt and the right ⌥ alt opens the menu. Set `SwapRightCmdAlt` to 0 if you'd rather have the menu on ⌘ cmd.
+On the left, [fn] and [Ctrl] are swapped, [⌥ alt] becomes [Win] and [⌘ cmd] becomes [Alt]. The right side only has two keys to work with, and one of them is the context-menu key. By default the right [⌘ cmd] is [Alt] and the right [⌥ alt] opens the menu. Set `SwapRightCmdAlt` to 0 if you'd rather have the menu on [⌘ cmd].
 
-That Alt is the **left** one on purpose. Windows treats Right Alt as AltGr, and the task switcher never gets the "commit" from a VK_RMENU release - Alt+Tab with it leaves the window list on screen waiting for Enter.
+That [Alt] is the **left** one on purpose. Windows treats [Right Alt] as AltGr, and the task switcher never gets the "commit" from a VK_RMENU release - [Alt]+[Tab] with it leaves the window list on screen waiting for [Enter].
 
-One thing that trips people up: Alt, Ctrl and Win do nothing on their own. If you press the right ⌥ alt and nothing happens, that's Alt behaving normally. Try ⌥ alt+Tab.
+One thing that trips people up: [Alt], [Ctrl] and [Win] do nothing on their own. If you press the right [⌥ alt] and nothing happens, that's [Alt] behaving normally. Try [⌥ alt]+[Tab].
 
 ## How it works
 
 The driver is a lower filter on the HID device node, so it sits between the transport (USB or Bluetooth) and HIDCLASS and gets to rewrite input reports before anything parses them. No user-mode software is involved.
 
-The two keyboards don't look alike on the wire. The A1644 sends 11-byte reports. The A1314 sends 10-byte keyboard reports plus 3-byte "special key" reports that carry ⏏ eject and Fn in the low bits. `A1314.c` and `A1644.c` each know their layout and translate it, then both go through the same rules.
+The two keyboards don't look alike on the wire. The A1644 sends 11-byte reports. The A1314 sends 10-byte keyboard reports plus 3-byte "special key" reports that carry [⏏ eject] and [Fn] in the low bits. `A1314.c` and `A1644.c` each know their layout and translate it, then both go through the same rules.
 
-Volume and brightness needed a different trick. The A1314's report descriptor has no Mute, Volume or Brightness usages at all, and Windows ignores the ones that exist on the keyboard page, so there was nothing to rewrite in the report. Instead the driver also installs itself as a tiny root-enumerated device and creates a virtual Consumer Control device through the Virtual HID Framework. Windows sees a second, ordinary multimedia keyboard with Mute, Vol+/Vol- and Brightness+/Brightness-, and Fn+F1/F2 plus Fn+F10..F12 submit reports to it. That's also why you'll find a "WinAppleKey Virtual HID Device" in Device Manager.
+Volume and brightness needed a different trick. The A1314's report descriptor has no Mute, Volume or Brightness usages at all, and Windows ignores the ones that exist on the keyboard page, so there was nothing to rewrite in the report. Instead the driver also installs itself as a tiny root-enumerated device and creates a virtual Consumer Control device through the Virtual HID Framework. Windows sees a second, ordinary multimedia keyboard with Mute, Vol+/Vol- and Brightness+/Brightness-, and [Fn]+[F1]/[F2] plus [Fn]+[F10]..[F12] submit reports to it. That's also why you'll find a "WinAppleKey Virtual HID Device" in Device Manager.
 
 Brightness is the part that surprised me. External keyboards with brightness keys normally do nothing on a Windows laptop, so I expected the Consumer usages to be ignored too. They aren't: 0x6F/0x70 go straight to the internal panel, and the log shows the brightness changing about 7 ms after the report. It won't touch an external monitor, though - that would be DDC/CI, which is a separate problem.
 
@@ -76,7 +78,7 @@ That last command installs the keyboard filter. The volume keys need one more st
 devcon install WinAppleKey\x64\Release\WinAppleKey\WinAppleKey.inf root\WinAppleKeyVhf
 ```
 
-`devcon.exe` ships with the WDK. Skip this and everything still works except Fn+F1/F2 and Fn+F10..F12, which will just do nothing.
+`devcon.exe` ships with the WDK. Skip this and everything still works except [Fn]+[F1]/[F2] and [Fn]+[F10]..[F12], which will just do nothing.
 
 **Reinstalling.** `pnputil /delete-driver ... /uninstall` does not always remove the root node of the virtual device. If it survives, `pnputil /add-driver /install` reuses it and then `devcon install` creates a second one. The driver keeps one VHF handle for the whole driver, so the second host deletes the first host's device - and then removing either host leaves you with no virtual device at all. The symptom is nasty: the keyboard still works, everything that doesn't need the virtual device keeps working, and only volume and brightness are silently dead.
 
@@ -106,10 +108,10 @@ Four DWORDs under `HKLM\SYSTEM\CurrentControlSet\Services\WinAppleKey`.
 
 | Value | Default | What it does |
 | --- | --- | --- |
-| `SwapFnCtrl` | 1 | fn and Ctrl swap places |
-| `SwapAltCmd` | 1 | ⌥ alt and ⌘ cmd swap places, left side only |
+| `SwapFnCtrl` | 1 | [fn] and [Ctrl] swap places |
+| `SwapAltCmd` | 1 | [⌥ alt] and [⌘ cmd] swap places, left side only |
 | `RightCmdAsMenu` | 1 | one of the right-hand modifiers becomes the context-menu key |
-| `SwapRightCmdAlt` | 1 | 0: right ⌘ cmd is the menu key, right ⌥ alt is Alt. 1: the other way round |
+| `SwapRightCmdAlt` | 1 | 0: right [⌘ cmd] is the menu key, right [⌥ alt] is [Alt]. 1: the other way round |
 
 These live under the driver's service key, so a full uninstall takes them with it and the next install starts from the INF defaults again. Worth remembering if you change something and then reinstall the package.
 
@@ -176,7 +178,7 @@ Read this before you do, because the failure mode is a bugcheck, not an error me
 
 **`reportBuffer` starts with the report ID.** `HID_XFER_PACKET` wants `{reportId, data...}` and `reportBufferLen` has to include that byte. The WDK miniport samples give it away (`packet.reportBuffer + sizeof(packet.reportId)`). Hand it a data-only buffer and HIDCLASS reads your first data byte as a report ID and drops the whole thing, silently.
 
-**Delete the virtual device before the remove request goes down.** `vhf.sys` is a KMDF driver; if you call `VhfDelete` after forwarding `IRP_MN_REMOVE_DEVICE` you're talking to a filter that is already being torn down, and you get `0x50 PAGE_FAULT_IN_NONPAGED_AREA` in `wdf01000.sys`. Do it first, and keep report submission out of the way while it happens (a spinlock and a flag will do).
+**[Delete] the virtual device before the remove request goes down.** `vhf.sys` is a KMDF driver; if you call `VhfDelete` after forwarding `IRP_MN_REMOVE_DEVICE` you're talking to a filter that is already being torn down, and you get `0x50 PAGE_FAULT_IN_NONPAGED_AREA` in `wdf01000.sys`. Do it first, and keep report submission out of the way while it happens (a spinlock and a flag will do).
 
 **Report bits are assigned in declaration order.** The usages in the report descriptor become bit 0, bit 1, bit 2 and so on, so inserting a usage in the middle silently shifts everything after it. If you add one, keep the `VhfBit*` defines in `Driver.h` in step with the descriptor in `Vhf.c`. Brightness (0x6F/0x70) is worth knowing about too: it looks like the sort of usage Windows would ignore, but it works.
 
@@ -192,25 +194,25 @@ All of this is much easier to get wrong than to debug on the machine you're usin
 No. Kernel-mode drivers need an EV certificate plus Microsoft's attestation, and that means a registered company and real money. This is a hobby project, so it stays test-signed.
 
 **The multimedia keys don't work.**
-They do now, natively. Fn+F7..F9 emit real Consumer usages, so Windows handles them itself. `MapMultimediaKeys.ahk` is only kept for history - it maps the old F19..F24 scheme and isn't needed any more.
+They do now, natively. [Fn]+[F7]..[F9] emit real Consumer usages, so Windows handles them itself. `MapMultimediaKeys.ahk` is only kept for history - it maps the old [F19]..[F24] scheme and isn't needed any more.
 
 **Brightness doesn't do anything.**
-Fn+F1/F2 go through the virtual device, so without it they're silent no-ops - check that "WinAppleKey Virtual HID Device" is present. And there has to be an internal panel to dim: the usages reach the laptop display, not an external monitor.
+[Fn]+[F1]/[F2] go through the virtual device, so without it they're silent no-ops - check that "WinAppleKey Virtual HID Device" is present. And there has to be an internal panel to dim: the usages reach the laptop display, not an external monitor.
 
-**Ctrl+Shift+T doesn't reopen a closed tab in Chrome.**
-That's the keyboard, not the driver. Use Ctrl+RightShift+T.
+**[Ctrl]+[Shift]+[T] doesn't reopen a closed tab in Chrome.**
+That's the keyboard, not the driver. Use [Ctrl]+[Right Shift]+[T].
 
 **TESTSIGNING won't turn on: "The value is protected by Secure Boot policy".**
 Secure Boot is on. Turn it off in the firmware.
 
-**F5 does nothing, or the machine wakes up again right away.**
-The platform may not support the sleep state being requested; Modern Standby machines have no S3 and use S0 low-power idle instead. For hibernate, check that hibernation is enabled at all (`powercfg /h on`) - otherwise F6 is a silent no-op.
+**[F5] does nothing, or the machine wakes up again right away.**
+The platform may not support the sleep state being requested; Modern Standby machines have no S3 and use S0 low-power idle instead. For hibernate, check that hibernation is enabled at all (`powercfg /h on`) - otherwise [F6] is a silent no-op.
 
 **Why is there a second "WinAppleKey Virtual HID Device"?**
 That's the virtual Consumer Control device that provides brightness and the volume keys. Remove that device and you lose those, nothing else.
 
-**The right ⌥ alt / ⌘ cmd does nothing.**
-It's a modifier. Modifiers don't produce events on their own. Try it with Tab.
+**The right [⌥ alt] / [⌘ cmd] does nothing.**
+It's a modifier. Modifiers don't produce events on their own. Try it with [Tab].
 
 **Which keyboards are supported?**
 The A1644 and the A1314 (all three layouts: `0x0255` ANSI, `0x0256` ISO, `0x0257` JIS). The INF also registers the A1255 (`0x0239`-`0x023B`) and the older Apple Wireless Keyboard (`0x022C`-`0x022E`, `0x0208`-`0x020A`), following Apple's own `KeyMagic64.inf` - those use the same report format and should behave the same, but I haven't tried them.
