@@ -205,7 +205,7 @@ They do now, natively. [Fn]+[F7]..[F9] emit real Consumer usages, so Windows han
 [Fn]+[F1]/[F2] go through the virtual device, so without it they're silent no-ops - check that "WinAppleKey Virtual HID Device" is present. And there has to be an internal panel to dim: the usages reach the laptop display, not an external monitor.
 
 **[Ctrl]+[Shift]+[T] doesn't reopen a closed tab in Chrome.**
-That's the keyboard, not the driver. Use [Ctrl]+[Right Shift]+[T].
+That's the keyboard, not the driver: the A1314 cannot resolve [fn] + [Left Shift] + [T] in its key matrix, so the T never leaves the keyboard. [Esc] and [Y] in the same combination arrive fine, and [Right Shift] sits in another column - so use [Ctrl]+[Right Shift]+[T].
 
 **TESTSIGNING won't turn on: "The value is protected by Secure Boot policy".**
 Secure Boot is on. Turn it off in the firmware.
