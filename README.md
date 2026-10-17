@@ -202,7 +202,7 @@ No. Kernel-mode drivers need an EV certificate plus Microsoft's attestation, and
 Secure Boot is on. Turn it off in the firmware.
 
 **The multimedia keys don't work.**
-They do now, natively. [Fn]+[F7]..[F9] emit real Consumer usages, so Windows handles them itself. `MapMultimediaKeys.ahk` is only kept for history - it maps the old [F19]..[F24] scheme and isn't needed any more.
+They do now, natively. [Fn]+[F7]..[F9] emit real Consumer usages, so Windows handles them itself.
 
 **Brightness doesn't do anything.**
 [Fn]+[F1]/[F2] go through the virtual device, so without it they're silent no-ops - check that "WinAppleKey Virtual HID Device" is present. And there has to be an internal panel to dim: the usages reach the laptop display, not an external monitor.
