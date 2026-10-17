@@ -116,7 +116,7 @@ Four DWORDs under `HKLM\SYSTEM\CurrentControlSet\Services\WinAppleKey`.
 | `SwapFnCtrl` | 1 | [fn] and [Ctrl] swap places |
 | `SwapAltCmd` | 1 | [⌥ alt] and [⌘ cmd] swap places, left side only |
 | `RightCmdAsMenu` | 1 | one of the right-hand modifiers becomes the context-menu key |
-| `SwapRightCmdAlt` | 1 | 0: right [⌘ cmd] is the menu key, right [⌥ alt] is [Alt]. 1: the other way round |
+| `SwapRightCmdAlt` | 1 | 1: right [⌥ alt] opens the menu, right [⌘ cmd] acts as [Alt]. 0: right [⌘ cmd] opens the menu, right [⌥ alt] acts as [Alt] |
 
 These live under the driver's service key, so a full uninstall takes them with it and the next install starts from the INF defaults again. Worth remembering if you change something and then reinstall the package.
 
