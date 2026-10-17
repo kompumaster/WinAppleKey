@@ -6,7 +6,7 @@ This is a fork of [samartzidis/WinAppleKey](https://github.com/samartzidis/WinAp
 
 Windows will type on an A1314 out of the box, so the keyboard isn't broken. What you don't get is the bottom-left corner you're used to. The leftmost key acts as Fn instead of Ctrl, Delete is hidden behind Fn, Eject does nothing, and the media, volume and brightness keys are dead. This driver fixes that.
 
-Tested on an A1314 (ISO, PID `0x0256`) over Bluetooth on Windows 11 24H2, build 26100. The A1644 side comes from the upstream project, but I don't own that keyboard, so it hasn't been re-tested since I changed things. Assume the A1314 path is the well-trodden one.
+Tested on an A1314 (ISO, PID `0x0256`) over Bluetooth on Windows 11 24H2, build 26100, on a Lenovo ThinkBook - that laptop is what the Fn layer, the brightness keys and the Alt+Tab behaviour were worked out against. The A1644 side comes from the upstream project, but I don't own that keyboard, so it hasn't been re-tested since I changed things. Assume the A1314 path is the well-trodden one.
 
 ## Keys
 
