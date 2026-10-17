@@ -19,6 +19,10 @@
     <Platform Condition="'$(Platform)' == ''">Win32</Platform>
     <RootNamespace>WinAppleKey</RootNamespace>
     <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
+    <!-- The WDK would otherwise name the generated test certificate after the
+         user and this machine ("WDKTestCert <user>,<ticks>"). That name ends up
+         in the .sys, the .cat and the MSI, so releases must not carry it. -->
+    <SubjectName>CN=WinAppleKey Test Certificate</SubjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -54,7 +58,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <!-- Keep the output inside the project directory. By default it follows
+       $(SolutionDir), so building the solution and building the project directly
+       produce the driver in two different places, and the installer looks in
+       exactly one. -->
+  <PropertyGroup>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <TimeStampServer>http://timestamp.verisign.com/scripts/timstamp.dll</TimeStampServer>
@@ -69,6 +80,9 @@
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>vhfkm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
     <PostBuildEvent>
       <Command>
       </Command>
@@ -90,7 +104,18 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <!-- No debug info in release binaries: the linker otherwise embeds the
+           full path to the build machine's PDB inside the .sys. -->
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>vhfkm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <!-- The WDK forces /DEBUG on drivers, which embeds the absolute path of
+           the PDB into the .sys. %_PDB% reduces it to the file name, so release
+           binaries do not advertise the build machine's directory layout. -->
+      <AdditionalOptions>/PDBALTPATH:%_PDB% %(AdditionalOptions)</AdditionalOptions>
+    </Link>
     <PostBuildEvent>
       <Command>
       </Command>
@@ -121,6 +146,9 @@
   <ItemGroup>
     <ClCompile Include="Driver.c" />
     <ClCompile Include="A1644.c" />
+    <ClCompile Include="A1314.c" />
+    <ClCompile Include="Vhf.c" />
+    <ClCompile Include="Power.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Driver.h" />

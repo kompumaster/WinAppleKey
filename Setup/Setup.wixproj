@@ -1,64 +1,73 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- WiX v3 is not assumed to be installed system-wide. WixBinDir points at its
+       bin directory and comes either from the environment (setx WixBinDir ...)
+       or from the command line (/p:WixBinDir=...). This target only exists so
+       that a missing value fails with a sentence instead of an import error
+       pointing at \Wix.targets - when WixBinDir is set, Wix.targets defines
+       Build and this one is replaced. -->
+  <Target Name="Build" Condition=" '$(WixBinDir)' == '' ">
+    <Error Text="WixBinDir is not set. Point it at the WiX v3 bin directory, e.g. setx WixBinDir D:\path\to\wix, or pass /p:WixBinDir=D:\path\to\wix." />
+  </Target>
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>3.10</ProductVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <ProductVersion>3.14</ProductVersion>
     <ProjectGuid>1ec4555e-aeb5-4615-84f4-3604734337f0</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>Setup</OutputName>
+    <OutputName>WinAppleKey-Setup</OutputName>
     <OutputType>Package</OutputType>
-    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
-    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+
+    <!-- The INF and the .sys use four fields and start at zero (0.1.1.11). The
+         MSI gets the three trailing ones (1.1.11), because MSI only ever looks at
+         three - the leading zero just says "this is not a commercially released
+         product". Bump both here and in WinAppleKey.inf / resource.rc. -->
+    <Version>1.1.11</Version>
+
+    <WixInstallPath Condition=" '$(WixBinDir)' != '' ">$(WixBinDir)</WixInstallPath>
+    <WixExtDir Condition=" '$(WixBinDir)' != '' ">$(WixBinDir)</WixExtDir>
+
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))\</RepoRoot>
+    <DriverOut>$(RepoRoot)WinAppleKey\x64\$(Configuration)\WinAppleKey\</DriverOut>
+    <CertOut>$(RepoRoot)WinAppleKey\x64\$(Configuration)\</CertOut>
+    <ToolOut>$(RepoRoot)Setup\x64\$(Configuration)\</ToolOut>
+
+    <OutputPath>$(RepoRoot)Setup\x64\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>$(RepoRoot)Setup\obj\$(Configuration)\wix\</IntermediateOutputPath>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>Debug</DefineConstants>
+
+  <PropertyGroup>
+    <DefineConstants>DriverOut=$(DriverOut);CertOut=$(CertOut);ToolOut=$(ToolOut);Version=$(Version)</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DefineConstants>Debug</DefineConstants>
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="Product.wxs" />
   </ItemGroup>
+
   <ItemGroup>
-    <WixExtension Include="WixIIsExtension">
-      <HintPath>$(WixExtDir)\WixIIsExtension.dll</HintPath>
-      <Name>WixIIsExtension</Name>
-    </WixExtension>
     <WixExtension Include="WixDifxAppExtension">
-      <HintPath>$(WixExtDir)\WixDifxAppExtension.dll</HintPath>
+      <HintPath>$(WixBinDir)\WixDifxAppExtension.dll</HintPath>
       <Name>WixDifxAppExtension</Name>
     </WixExtension>
+    <WixExtension Include="WixIIsExtension">
+      <HintPath>$(WixBinDir)\WixIIsExtension.dll</HintPath>
+      <Name>WixIIsExtension</Name>
+    </WixExtension>
     <WixExtension Include="WixUIExtension">
-      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <HintPath>$(WixBinDir)\WixUIExtension.dll</HintPath>
       <Name>WixUIExtension</Name>
     </WixExtension>
   </ItemGroup>
+
   <ItemGroup>
     <WixLibrary Include="difxapp_x64">
-      <HintPath>..\..\..\..\Program Files (x86)\WiX Toolset v3.11\bin\difxapp_x64.wixlib</HintPath>
+      <HintPath>$(WixBinDir)\difxapp_x64.wixlib</HintPath>
       <Name>difxapp_x64</Name>
     </WixLibrary>
   </ItemGroup>
-  <Import Project="$(WixTargetsPath)" />
-  <!--
-	To modify your build process, add your task inside one of the targets below and uncomment it.
-	Other similar extension points exist, see Wix.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
-	-->
+
+  <Import Project="$(WixBinDir)\Wix.targets" Condition=" '$(WixBinDir)' != '' " />
 </Project>

@@ -6,9 +6,10 @@ Class=HIDClass
 ClassGuid={745a17a0-74d3-11d0-b6fe-00a0c90f57da}
 Provider=%Provider%
 CatalogFile=WinAppleKey.cat
+PnpLockdown=1
 DriverPackageDisplayName="WinAppleKey"
 DriverPackageType=PlugAndPlay
-DriverVer=01/01/2020,1.0.7.0
+DriverVer=10/17/2026,0.1.1.11
 
 [ControlFlags]
 ExcludeFromSelect = *
@@ -33,6 +34,23 @@ WinAppleKey.sys = 1,
 ;Magic Keyboard A1644
 %USBKeyboard.DevDesc% = Dri_HID_Inst,USB\VID_05AC&PID_0267&MI_01
 %USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&0001004c_PID&0267
+;Wireless Keyboard A1314 (2011)
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&0255
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&0256
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&0257
+;Wireless Keyboard A1255 (2009)
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&0239
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&023A
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&023B
+;Apple Wireless Keyboard (original)
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&022c
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&022d
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&022e
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&0208
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&0209
+%USBKeyboard.DevDesc% = Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&000205ac_PID&020a
+;Virtual HID device (Consumer Control) hosted by the driver, used for the Volume/Mute keys
+%WinAppleKey.VhfDesc% = Dri_Vhf_Inst,root\WinAppleKeyVhf
 ;Magic Keyboard with Numeric Keypad
 ;%USBKeyboard.DevDesc%=Dri_HID_Inst,USB\VID_05AC&PID_026C&MI_01
 ;%USBKeyboard.DevDesc%=Dri_BTH_Inst,BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&0001004c_PID&026C
@@ -97,8 +115,10 @@ ServiceBinary = %12%\WinAppleKey.sys
 AddReg = HIDKbFlt_Service_AddReg
 
 [HIDKbFlt_Service_AddReg]
-HKR,,SwapAltCmd,0x00010003, 0
+HKR,,SwapAltCmd,0x00010003, 1
 HKR,,SwapFnCtrl,0x00010003, 1
+HKR,,RightCmdAsMenu,0x00010003, 1
+HKR,,SwapRightCmdAlt,0x00010003, 1
 
 [Dri_BTH_Inst.NT.HW]
 Include = keyboard.inf
@@ -111,6 +131,28 @@ AddReg  = Dri_BTH_Inst.NT.HW.AddReg
 
 [Dri_BTH_Inst.NT.Wdf]
 KmdfService = WinAppleKey, keyboard_wdfsect
+
+;=====================================================================
+; Virtual HID device (Consumer Control) hosted by the driver, used for the
+; Volume/Mute keys. It is installed as a root-enumerated device and uses the
+; very same service - the driver tells the two roles apart by the hardware ID
+; of the PDO it is asked to handle.
+;=====================================================================
+
+[Dri_Vhf_Inst.NT]
+CopyFiles = UKBMnt_Inst.CopyList
+
+[Dri_Vhf_Inst.NT.HW]
+AddReg = Dri_Vhf_Inst.NT.HW.AddReg
+
+[Dri_Vhf_Inst.NT.HW.AddReg]
+; vhf.sys must be loaded as a lower filter directly below the HID source
+; driver, otherwise VhfCreate() cannot reach it and fails.
+HKR,,"LowerFilters",0x00010000,"vhf"
+
+[Dri_Vhf_Inst.NT.Services]
+; 0x00000002 = SPSVCINST_ASSOCSERVICE: this device's *function* driver
+AddService = WinAppleKey,0x00000002,HIDKbFlt_Service_Inst
 
 ;=====================================================================
 
@@ -139,9 +181,10 @@ REG_EXPAND_SZ			= 0x00020000
 REG_DWORD				= 0x00010001
 REG_SZ					= 0x00000000
 
-Provider = "-"
+Provider = "Cucumber"
 Manufacturer = "-"
 
 USBKeyboard.DevDesc = "WinAppleKey"
+WinAppleKey.VhfDesc = "WinAppleKey Virtual HID Device"
 HIDKbFlt.SvcDesc = "WinAppleKey"
 KBDiskName = "WinAppleKey Install Disk"

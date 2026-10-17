@@ -1,58 +1,110 @@
-<?xml version="1.0" encoding="Windows-1252"?>
-<?define Version = "!(bind.fileVersion.WinAppleKeySYS)" ?>
-<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'
-     xmlns:difx='http://schemas.microsoft.com/wix/DifxAppExtension'
-     xmlns:iis='http://schemas.microsoft.com/wix/IIsExtension'>
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:difx="http://schemas.microsoft.com/wix/DifxAppExtension"
+     xmlns:iis="http://schemas.microsoft.com/wix/IIsExtension">
 
-  <Product Name='WinAppleKey $(var.Version)' Id='FF0F05EE-71DE-4377-ABAF-8941B725FD2E' Language='1033' Codepage='1252' 
-           Version='$(var.Version)' Manufacturer='George Samartzidis' UpgradeCode='74831B05-4207-49C5-94FF-33E824FA1845'>
+  <Product Id="*"
+           Name="WinAppleKey"
+           Language="1033"
+           Version="$(var.Version)"
+           Manufacturer="WinAppleKey"
+           UpgradeCode="74831B05-4207-49C5-94FF-33E824FA1845">
 
-    <Package Id='*' Keywords='WinAppleKey' Description='WinAppleKey Setup' InstallPrivileges='elevated'
-             Comments='Installs WinAppleKey' Manufacturer='George Samartzidis' InstallerVersion='200' Languages='1033' 
-             Compressed='yes' SummaryCodepage='1252' />
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="x64" />
+    <!-- AllowSameVersionUpgrades matters here because our ProductVersion comes
+         from the .sys file version, which has four fields. MSI only compares
+         the first three, so 1.1.0.7 and 1.1.0.8 look identical to it - without
+         this flag an update is simply installed next to the old version. -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of WinAppleKey is already installed." />
+    <MediaTemplate EmbedCab="yes" />
 
-    <Icon Id="icon.ico" SourceFile="icon.ico"/>
-    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+    <Property Id="ARPNOREPAIR" Value="yes" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Icon Id="AppIcon" SourceFile="icon.ico" />
     <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
-    <Binary Id="MyCertBinaryStream" SourceFile="$(var.SolutionDir)\WinAppleKey\WinAppleKey.cer" />
 
-    <Media Id='1' Cabinet='WinAppleKeyInstaller.cab' EmbedCab='yes' DiskPrompt='WinAppleKey Media' />
-
-    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />    
-    <Property Id='DiskPrompt' Value='WinAppleKey Install Media' />
+    <!-- The driver is test signed, so there is no point installing it anywhere
+         TESTSIGNING is off: Windows will simply refuse to load it. -->
     <Property Id="SYSTEMSTARTOPTIONS">
-      <RegistrySearch Id="SystemStartOptions" Root="HKLM" Key="SYSTEM\CurrentControlSet\Control" Name="SystemStartOptions" Type="raw" />
+      <RegistrySearch Id="SystemStartOptions" Root="HKLM" Key="SYSTEM\CurrentControlSet\Control"
+                      Name="SystemStartOptions" Type="raw" />
     </Property>
 
-    <Condition Message="64-bit Windows 7 or higher is required."><![CDATA[Installed OR VersionNT64 >= 601]]></Condition>  
-    
-    <Condition Message="TESTSIGNING must be enabled for using WinAppleKey. Please check the GitHub project page for further instructions.">
+    <Condition Message="64-bit Windows is required.">Installed OR VersionNT64</Condition>
+    <Condition Message="TESTSIGNING is not enabled, so Windows would refuse to load the driver. Run 'bcdedit /set TESTSIGNING ON' as administrator and reboot, then start this setup again. Secure Boot must be off for that, and Memory Integrity must be disabled.">
       <![CDATA[Installed OR (SYSTEMSTARTOPTIONS >< "TESTSIGNING")]]>
     </Condition>
-    
-    <Directory Id='TARGETDIR' Name='SourceDir'>
-      <Directory Id='DriversFolder'>
-          <Directory Id='WinAppleKeyAppDrivers' Name='Drivers'>
-            <Directory Id='WinAppleKeyDir' Name='WinAppleKey'>
-              <Component Id='WinAppleKeyDriver' Guid='03979D55-7A2A-44C3-B5DB-D0EBDCE36B38'>
-                <iis:Certificate Id="Certificate.RootCA" Name="WinAppleKey.cer" Request="no" StoreLocation="localMachine" StoreName="root" Overwrite="yes" BinaryKey="MyCertBinaryStream"/>
-                <File Id='WinAppleKeySYS' Name='WinAppleKey.sys' DiskId='1' Source='$(var.SolutionDir)\$(var.Platform)\$(var.Configuration)\WinAppleKey\WinAppleKey.sys' KeyPath='yes' />
-                <File Id='WinAppleKeyINF' Name='WinAppleKey.inf' DiskId='1' Source='$(var.SolutionDir)\$(var.Platform)\$(var.Configuration)\WinAppleKey\WinAppleKey.inf' />
-                <File Id='WinAppleKeyCAT' Name='WinAppleKey.cat' DiskId='1' Source='$(var.SolutionDir)\$(var.Platform)\$(var.Configuration)\WinAppleKey\WinAppleKey.cat' />
-                <difx:Driver AddRemovePrograms="no" Legacy='no' DeleteFiles='yes' />
-              </Component>
-            </Directory>
-        </Directory>       
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="WinAppleKey" />
       </Directory>
     </Directory>
-    
-    <Feature Id='Complete' Level='1'>
-      <ComponentRef Id='WinAppleKeyDriver' />
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="DriverComponent" Guid="03979D55-7A2A-44C3-B5DB-D0EBDCE36B38" Win64="yes">
+        <File Id="WinAppleKeySYS" Name="WinAppleKey.sys" Source="$(var.DriverOut)WinAppleKey.sys" KeyPath="yes" />
+        <File Id="WinAppleKeyINF" Name="WinAppleKey.inf" Source="$(var.DriverOut)WinAppleKey.inf" />
+        <File Id="WinAppleKeyCAT" Name="winapplekey.cat" Source="$(var.DriverOut)winapplekey.cat" />
+        <File Id="WinAppleKeyCER" Name="WinAppleKey.cer" Source="$(var.CertOut)WinAppleKey.cer" />
+
+        <!-- Root for the chain, TrustedPublisher for the SPC signature. Both are
+             removed again when the component is uninstalled. -->
+        <iis:Certificate Id="CertRoot" Name="WinAppleKey test certificate"
+                         BinaryKey="CertBinary" Request="no"
+                         StoreLocation="localMachine" StoreName="root" Overwrite="yes" />
+        <iis:Certificate Id="CertPublisher" Name="WinAppleKey test certificate"
+                         BinaryKey="CertBinary" Request="no"
+                         StoreLocation="localMachine" StoreName="trustedPublisher" Overwrite="yes" />
+
+        <difx:Driver AddRemovePrograms="no" Legacy="no" DeleteFiles="no" />
+      </Component>
+
+      <!-- Not needed by the installer itself (that runs from the Binary table),
+           but it is the tool to reach for when the virtual device gets stuck. -->
+      <Component Id="ToolComponent" Guid="7E6C3A2B-5D41-4F0E-9B2A-3C8D5E7A1F60" Win64="yes">
+        <File Id="DeviceToolEXE" Name="DeviceTool.exe" Source="$(var.ToolOut)DeviceTool.exe" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="Complete" Level="1">
+      <ComponentRef Id="DriverComponent" />
+      <ComponentRef Id="ToolComponent" />
     </Feature>
-    
+
+    <Binary Id="CertBinary" SourceFile="$(var.CertOut)WinAppleKey.cer" />
+    <Binary Id="DeviceToolBin" SourceFile="$(var.ToolOut)DeviceTool.exe" />
+
+    <!-- The virtual HID device lives on its own root-enumerated node, which no
+         built-in tool can create. DeviceTool does it, and also binds the INF. -->
+    <CustomAction Id="CreateVhfDevice"
+                  BinaryKey="DeviceToolBin"
+                  ExeCommand='create "root\WinAppleKeyVhf" "[INSTALLFOLDER]WinAppleKey.inf"'
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="RemoveVhfDevice"
+                  BinaryKey="DeviceToolBin"
+                  ExeCommand='remove "root\WinAppleKeyVhf"'
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <!-- DIFxApp takes the driver package out but leaves the service and the
+         copy of the .sys behind. This runs at the very end, once the filter is
+         no longer bound to the keyboard, because a bound filter cannot be
+         stopped - ServiceControl/Stop simply hangs on it. -->
+    <CustomAction Id="CleanUpDriver"
+                  BinaryKey="DeviceToolBin"
+                  ExeCommand='cleanup WinAppleKey WinAppleKey.sys'
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+
+    <InstallExecuteSequence>
+      <!-- At the very end, so the certificate is already trusted and the driver
+           store has the package. -->
+      <Custom Action="CreateVhfDevice" Before="InstallFinalize">NOT Installed</Custom>
+      <!-- Before anything is torn down, so the node disappears first. -->
+      <Custom Action="RemoveVhfDevice" After="InstallInitialize">REMOVE="ALL"</Custom>
+      <Custom Action="CleanUpDriver" After="CreateVhfDevice">REMOVE="ALL"</Custom>
+    </InstallExecuteSequence>
+
     <UIRef Id="WixUI_Minimal" />
-    
+
   </Product>
 </Wix>
-
-

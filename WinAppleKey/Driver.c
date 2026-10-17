@@ -13,6 +13,8 @@
 //
 DWORD g_dwSwapAltCmd = 0;
 DWORD g_dwSwapFnCtrl = 0;
+DWORD g_dwRightCmdAsMenu = 0;
+DWORD g_dwSwapRightCmdAlt = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Driver Entry
@@ -20,6 +22,9 @@ DWORD g_dwSwapFnCtrl = 0;
 NTSTATUS DriverEntry(IN PDRIVER_OBJECT driverObject, IN PUNICODE_STRING registryPath)
 {
 	DebugPrint("DriverEntry(): driverObject = 0x%x\n", driverObject);
+
+	VhfInitialize();
+	PowerInitialize();
 
 	driverObject->DriverUnload = DriverUnload;
 	driverObject->DriverExtension->AddDevice = AddDevice;
@@ -34,6 +39,8 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT driverObject, IN PUNICODE_STRING registry
 
 	ReadDriverRegistryValue(registryPath, REG_DWORD, L"SwapAltCmd", (void*)&g_dwSwapAltCmd);
 	ReadDriverRegistryValue(registryPath, REG_DWORD, L"SwapFnCtrl", (void*)&g_dwSwapFnCtrl);
+	ReadDriverRegistryValue(registryPath, REG_DWORD, L"RightCmdAsMenu", (void*)&g_dwRightCmdAsMenu);
+	ReadDriverRegistryValue(registryPath, REG_DWORD, L"SwapRightCmdAlt", (void*)&g_dwSwapRightCmdAlt);
 
 	return STATUS_SUCCESS;
 }
@@ -45,13 +52,61 @@ void DriverUnload(IN PDRIVER_OBJECT driverObject)
 	DebugPrint("DriverUnload(): driverObject = 0x%x\n", driverObject);
 }
 
+// Case insensitive substring search (the kernel CRT is not available here).
+static BOOLEAN ContainsNoCase(PCWSTR haystack, PCWSTR needle)
+{
+	SIZE_T needleLength = 0;
+	while (needle[needleLength])
+		needleLength++;
+
+	for (; *haystack; haystack++)
+	{
+		SIZE_T i = 0;
+		while (i < needleLength && haystack[i] &&
+			RtlUpcaseUnicodeChar(haystack[i]) == RtlUpcaseUnicodeChar(needle[i]))
+			i++;
+
+		if (i == needleLength)
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
+// TRUE for the root-enumerated device that hosts our virtual HID device
+// (root\WinAppleKeyVhf), as opposed to a keyboard we filter.
+static BOOLEAN IsVhfHostDevice(PDEVICE_OBJECT pdo)
+{
+	WCHAR buffer[1024];
+	ULONG length = 0;
+	PCWSTR end;
+	PCWSTR p;
+
+	if (!NT_SUCCESS(IoGetDeviceProperty(pdo, DevicePropertyHardwareID, sizeof(buffer), buffer, &length)))
+		return FALSE;
+
+	// DevicePropertyHardwareID is a REG_MULTI_SZ
+	end = buffer + (length / sizeof(WCHAR));
+	for (p = buffer; p < end;)
+	{
+		if (ContainsNoCase(p, L"WinAppleKeyVhf"))
+			return TRUE;
+
+		while (p < end && *p)
+			p++;
+		p++;
+	}
+
+	return FALSE;
+}
+
 NTSTATUS AddDevice(IN PDRIVER_OBJECT driverObject, IN PDEVICE_OBJECT pdo)
 {
 	PAGED_CODE();
 
 	DebugPrint("AddDevice(): driverObject: 0x%x, pdo: 0x%x\n", driverObject, pdo);
 
-	//Create the filter functional device object
+	//Create the functional device object
 	PDEVICE_OBJECT fido;
 	ULONG type = GetLowerDeviceType(pdo);
 	NTSTATUS status = IoCreateDevice(driverObject, sizeof(DEVICE_EXTENSION), NULL, type, 0, FALSE, &fido);
@@ -84,6 +139,25 @@ NTSTATUS AddDevice(IN PDRIVER_OBJECT driverObject, IN PDEVICE_OBJECT pdo)
 		fido->Flags |= fdo->Flags & (DO_DIRECT_IO | DO_BUFFERED_IO | DO_POWER_PAGABLE);
 
 		fido->Flags &= ~DO_DEVICE_INITIALIZING; // Clear the DO_DEVICE_INITIALIZING flag so that we can get IRPs
+
+		//Root-enumerated device that hosts the driver's virtual HID device.
+		//It is attached above (mandatory: VhfCreate() finds the vhf.sys lower
+		//filter through IoGetLowerDeviceObject()).
+		if (IsVhfHostDevice(pdo))
+		{
+			DebugPrint("AddDevice(): hosting the virtual HID device\n");
+
+			fidoExt->IsVhfHost = TRUE;
+
+			status = VhfInit(fido);
+			if (!NT_SUCCESS(status))
+			{
+				DebugPrint("AddDevice(): VhfInit failed 0x%x\n", status);
+				break;
+			}
+
+			status = STATUS_SUCCESS;
+		}
 
 	} while (FALSE);
 
@@ -182,13 +256,34 @@ NTSTATUS DispatchPnp(IN PDEVICE_OBJECT fido, IN PIRP irp)
 		return IoCallDriver(pdx->LowerDeviceObject, irp);
 	}
 
+	//Handle surprise removal: the device is already gone, but the virtual HID
+	//device still has to be deleted (VhfDeinit is idempotent).
+	if (fcn == IRP_MN_SURPRISE_REMOVAL)
+	{
+		if (pdx->IsVhfHost)
+			VhfDeinit();
+
+		IoSkipCurrentIrpStackLocation(irp);
+		status = IoCallDriver(pdx->LowerDeviceObject, irp);
+
+		IoReleaseRemoveLock(&pdx->RemoveLock, irp);
+
+		return status;
+	}
+
 	//Handle remove device specially in order to cleanup device stack
 	if (fcn == IRP_MN_REMOVE_DEVICE)
 	{
+		//The virtual HID device must be deleted while vhf.sys is still alive,
+		//i.e. BEFORE the remove request is forwarded down the stack. Deleting it
+		//afterwards faults inside wdf01000.sys (vhf.sys is a KMDF driver).
+		if (pdx->IsVhfHost)
+			VhfDeinit();
+
 		IoSkipCurrentIrpStackLocation(irp);
 
 		status = IoCallDriver(pdx->LowerDeviceObject, irp);
-		
+
 		IoReleaseRemoveLockAndWait(&pdx->RemoveLock, irp);
 
 		RemoveDevice(fido);
@@ -270,11 +365,16 @@ NTSTATUS InternalIoctlComplete(IN PDEVICE_OBJECT fido, IN PIRP irp, IN PVOID con
 				ULONG size = pbrb->BrbL2caAclTransfer.BufferSize;
 				DebugPrint("InternalIoctlComplete BRB_L2CA_ACL_TRANSFER: Buffer = 0x%x, BufferSize = %lu\n", buf, size);
 
-				if (buf && size == 11)
+				if (buf)
 				{
-					DebugPrintBuffer("ProcessA1644Buffer(): <= ", buf, size);
-					ProcessA1644Buffer(buf + 2, 9);
-					DebugPrintBuffer("ProcessA1644Buffer(): => ", buf, size);
+					if (size == 11) //Apple Magic Keyboard A1644
+					{
+						DebugPrintBuffer("ProcessA1644Buffer(): <= ", buf, size);
+						ProcessA1644Buffer(buf + 2, 9);
+						DebugPrintBuffer("ProcessA1644Buffer(): => ", buf, size);
+					}
+					else if (size == 3 || size == 10) //Apple Wireless Keyboard A1314 (special key and regular key reports)
+						ProcessA1314Block(pbrb);
 				}
 			}
 		}

@@ -38,6 +38,8 @@ extern "C" {
 
 	extern DWORD g_dwSwapAltCmd;
 	extern DWORD g_dwSwapFnCtrl;
+	extern DWORD g_dwRightCmdAsMenu;
+	extern DWORD g_dwSwapRightCmdAlt;
 
 	enum HidCodes
 	{
@@ -47,6 +49,8 @@ extern "C" {
 		HidKeyP = 0x13,
 		HidKeyS = 0x16,
 		HidKeyT = 0x17,
+		HidKeyZ = 0x1d,
+		HidTab = 0x2b,
 		HidF1 = 0x3a,
 		HidF2 = 0x3b,
 		HidF3 = 0x3c,
@@ -85,6 +89,7 @@ extern "C" {
 		HidScrLck = 0x47,
 		HidPauseBreak = 0x48,
 		HidInsert = 0x49,
+		HidMenu = 0x65, // Keyboard Application (context menu) key
 		HidLCtrlMask = 0x1,
 		HidRCtrlMask = 0x10,
 		HidLAltMask = 0x4,
@@ -101,8 +106,17 @@ extern "C" {
 		PDEVICE_OBJECT DeviceObject; // device object this extension belongs to
 		PDEVICE_OBJECT LowerDeviceObject; // next lower driver in same stack
 		PDEVICE_OBJECT Pdo; // the PDO
+		BOOLEAN IsVhfHost; // TRUE for the root-enumerated device that hosts the virtual HID device
 		IO_REMOVE_LOCK RemoveLock;
 	} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+
+	// Bits of the virtual HID device's Consumer Control report (see Vhf.c).
+	// Keep in sync with the report descriptor there.
+	#define VhfBitMute 0x01
+	#define VhfBitVolumeUp 0x02
+	#define VhfBitVolumeDown 0x04
+	#define VhfBitBrightnessUp 0x08
+	#define VhfBitBrightnessDown 0x10
 
 	///////////////////////////////////////////////////////////////////////////////
 	// Global functions
@@ -125,6 +139,14 @@ extern "C" {
 
 	void ProcessA1314Block(PBRB pbrb);
 	void ProcessA1644Buffer(BYTE* pbuf, ULONG size);
+
+	VOID VhfInitialize(VOID);
+	NTSTATUS VhfInit(PDEVICE_OBJECT fdo);
+	VOID VhfDeinit(VOID);
+	VOID VhfSendReport(UCHAR bits);
+
+	VOID PowerInitialize(VOID);
+	VOID WinAppleKeyRequestPowerAction(POWER_ACTION action);
 
 #ifdef __cplusplus
 }

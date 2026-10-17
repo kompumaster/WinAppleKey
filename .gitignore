@@ -240,3 +240,14 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+# WinAppleKey specifics
+#
+# Private key material from the original author. The matching .pfx is already
+# covered above; publishing either would let anyone sign drivers as us.
+*.pvk
+#
+# Local leftovers: dark.exe drops its decompiled .wxs next to the .msi it is
+# pointed at, and the agent tooling leaves a session file in the repo root.
+/WinAppleKey-Setup.wxs
+/opencode
