@@ -198,6 +198,9 @@ All of this is much easier to get wrong than to debug on the machine you're usin
 **Can this be properly signed so I don't need TESTSIGNING?**
 No. Kernel-mode drivers need an EV certificate plus Microsoft's attestation, and that means a registered company and real money. This is a hobby project, so it stays test-signed.
 
+**TESTSIGNING won't turn on: "The value is protected by Secure Boot policy".**
+Secure Boot is on. Turn it off in the firmware.
+
 **The multimedia keys don't work.**
 They do now, natively. [Fn]+[F7]..[F9] emit real Consumer usages, so Windows handles them itself. `MapMultimediaKeys.ahk` is only kept for history - it maps the old [F19]..[F24] scheme and isn't needed any more.
 
@@ -206,9 +209,6 @@ They do now, natively. [Fn]+[F7]..[F9] emit real Consumer usages, so Windows han
 
 **[Ctrl]+[Shift]+[T] doesn't reopen a closed tab in Chrome.**
 That's the keyboard, not the driver: the A1314 cannot resolve [fn] + [Left Shift] + [T] in its key matrix, so the T never leaves the keyboard. [Esc] and [Y] in the same combination arrive fine, and [Right Shift] sits in another column - so use [Ctrl]+[Right Shift]+[T].
-
-**TESTSIGNING won't turn on: "The value is protected by Secure Boot policy".**
-Secure Boot is on. Turn it off in the firmware.
 
 **[F5] does nothing, or the machine wakes up again right away.**
 The platform may not support the sleep state being requested; Modern Standby machines have no S3 and use S0 low-power idle instead. For hibernate, check that hibernation is enabled at all (`powercfg /h on`) - otherwise [F6] is a silent no-op.
